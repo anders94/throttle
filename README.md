@@ -1,6 +1,11 @@
-throttle-js
-===========
-Parallelize function execution up to a defined limit.
+throttle
+========
+Parallelize function execution in Node.js up to a defined limit.
+
+Usually you either run functions one after the other sequentially or in parallel
+simultaneously. However, many times it would be more helpful to run up to some
+number of parallelized functions but fall back to serial beyond that. This Node.js
+module provides a framework for this.
 
 Install
 -------
