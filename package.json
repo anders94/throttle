@@ -1,0 +1,24 @@
+{
+  "name": "throttle",
+  "version": "1.0.0",
+  "description": "Parallelize function execution up to a defined limit.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anders94/throttle-js.git"
+  },
+  "keywords": [
+    "limit",
+    "parallel",
+    "execution"
+  ],
+  "author": "Anders Brownworth",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/anders94/throttle-js/issues"
+  },
+  "homepage": "https://github.com/anders94/throttle-js#readme"
+}
