@@ -5,13 +5,13 @@ Parallelize function execution up to a defined limit.
 Install
 -------
 ```sh
-npm i throttle-js
+npm i @anders94/throttle
 ```
 
 Usage
 -----
 ```js
-const Throttle = require('throttle-js');
+const Throttle = require('@anders94/throttle');
 
 const throttle = new Throttle(2);
 
