@@ -15,6 +15,8 @@ npm i @anders94/throttle
 
 Usage
 -----
+Once you `enqueue()` functions, they immediately start to execute.
+
 ```js
 const Throttle = require('@anders94/throttle');
 
@@ -37,6 +39,13 @@ throttle.enqueue(async () => await wait(300));
 throttle.enqueue(async () => await wait(200));
 throttle.enqueue(async () => await wait(100));
 ```
+In the above example, `const throttle = new Throttle(2)` initialized the throttle
+to run up to `2` functions at the same time. We quickly enqueued 4 functions, each
+waiting less and less time, so the first two start (`wait 400ms` and `wait 300ms`) but
+the next two are enqueued but don't start executing. The first to finish is the
+second function, (`wait 300ms`) so `wait 200ms` starts. Next to finish is the first
+function, (`wait 400ms`) so `wait 100ms` starts next which ends soon after. Last
+to end is `wait 200ms`.
 
 Output:
 ```
