@@ -19,6 +19,8 @@ module.exports =
 
 	length = () => this.todo.length;
 
+	finish = () => {};
+
 	run = async () => {
 	    if (this.running < this.limit) {
 		this.running++;
@@ -26,6 +28,8 @@ module.exports =
 		this.running--;
 		if (!this.isEmpty())
 		    this.run();
+		else
+		    finish();
 
 	    }
 
