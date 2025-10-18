@@ -32,10 +32,13 @@ const wait = async (delay) => {
 
 }
 
-throttle.enqueue(async () => await wait(400));
-throttle.enqueue(async () => await wait(300));
-throttle.enqueue(async () => await wait(200));
-throttle.enqueue(async () => await wait(100));
+await Promise.all([
+    throttle.enqueue(async () => await wait(400)),
+    throttle.enqueue(async () => await wait(300)),
+    throttle.enqueue(async () => await wait(200)),
+    throttle.enqueue(async () => await wait(100))
+]);
+console.log('All functions completed!');
 ```
 
 In the above example, `const throttle = new Throttle(2)` initialized the throttle
@@ -78,26 +81,41 @@ const throttle = new Throttle(3); // Allow up to 3 concurrent functions
 Adds a function to the execution queue. If there are available execution slots (below the limit), the function starts immediately. Otherwise, it waits in the queue.
 
 - **fn** `{function}` - Function to execute (can be sync or async)
-- **Returns:** `undefined`
+- **Returns:** `{Promise}` - Promise that resolves with the function's return value or rejects with any error thrown
 
 **Example:**
 ```js
-throttle.enqueue(() => console.log('Hello World'));
-throttle.enqueue(async () => {
-    await fetch('https://api.example.com/data');
+// Basic usage with promise
+const result = await throttle.enqueue(() => 'Hello World');
+console.log(result); // 'Hello World'
+
+// With async functions
+const data = await throttle.enqueue(async () => {
+    const response = await fetch('https://api.example.com/data');
+    return response.json();
 });
+
+// Error handling
+try {
+    await throttle.enqueue(() => {
+        throw new Error('Something went wrong');
+    });
+} catch (error) {
+    console.error(error.message); // 'Something went wrong'
+}
 ```
 
 #### `dequeue()`
-Removes and returns the next function from the queue without executing it.
+Removes and returns the next task from the queue without executing it.
 
-- **Returns:** `{function|undefined}` - The next queued function, or `undefined` if queue is empty
+- **Returns:** `{object|undefined}` - The next queued task object containing `{fn, resolve, reject}`, or `undefined` if queue is empty
 
 **Example:**
 ```js
-const nextFunction = throttle.dequeue();
-if (nextFunction) {
-    console.log('Dequeued a function');
+const nextTask = throttle.dequeue();
+if (nextTask) {
+    console.log('Dequeued a task');
+    // Note: Manual execution would require calling nextTask.fn() and handling nextTask.resolve/reject
 }
 ```
 
@@ -121,6 +139,22 @@ Returns the number of functions currently in the queue (waiting to execute).
 **Example:**
 ```js
 console.log(`${throttle.length()} functions waiting in queue`);
+```
+
+#### `clearQueue()`
+Removes all pending functions from the queue and rejects their promises. Does not affect currently running functions.
+
+- **Returns:** `{number}` - Number of tasks that were cleared from the queue
+
+**Example:**
+```js
+// Add some functions to the queue
+throttle.enqueue(() => 'task 1').catch(err => console.log('Cleared:', err.message));
+throttle.enqueue(() => 'task 2').catch(err => console.log('Cleared:', err.message));
+
+// Clear all pending tasks
+const cleared = throttle.clearQueue();
+console.log(`${cleared} tasks were cleared`); // "2 tasks were cleared"
 ```
 
 #### `finish()`
@@ -157,15 +191,21 @@ console.log(`${throttle.running} functions currently running`);
 ## Advanced Usage
 
 ### Error Handling
-Functions that throw errors will complete their execution slot, allowing the next queued function to run:
+Functions that throw errors will reject their returned promise but won't stop the queue. The error is contained to that specific function:
 
 ```js
+// This will reject the promise but not affect other functions
 throttle.enqueue(async () => {
     throw new Error('This will not stop the queue');
+}).catch(error => {
+    console.error('Function failed:', error.message);
 });
 
+// This will still execute normally
 throttle.enqueue(() => {
     console.log('This will still execute');
+}).then(result => {
+    console.log('Function completed successfully');
 });
 ```
 
@@ -190,6 +230,19 @@ throttle.finish = () => {
     console.log('All tasks completed successfully!');
     process.exit(0);
 };
+```
+
+### Queue Cleanup
+Use `clearQueue()` for cleanup scenarios like application shutdown:
+
+```js
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('Shutting down...');
+    const cleared = throttle.clearQueue();
+    console.log(`Cancelled ${cleared} pending tasks`);
+    process.exit(0);
+});
 ```
 
 ## License

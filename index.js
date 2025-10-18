@@ -8,8 +8,10 @@ module.exports =
 	}
 
 	enqueue = (f) => {
-	    this.todo.push(f);
-	    this.run();
+	    return new Promise((resolve, reject) => {
+		this.todo.push({ fn: f, resolve, reject });
+		this.run();
+	    });
 
 	}
 
@@ -19,17 +21,33 @@ module.exports =
 
 	length = () => this.todo.length;
 
+	clearQueue = () => {
+	    const cleared = this.todo.splice(0);
+	    cleared.forEach(task => {
+		task.reject(new Error('Queue cleared'));
+	    });
+	    return cleared.length;
+	};
+
 	finish = () => {};
 
 	run = async () => {
 	    if (this.running < this.limit) {
 		this.running++;
-		await this.dequeue()();
+		const task = this.dequeue();
+		if (task) {
+		    try {
+			const result = await task.fn();
+			task.resolve(result);
+		    } catch (error) {
+			task.reject(error);
+		    }
+		}
 		this.running--;
 		if (!this.isEmpty())
 		    this.run();
 		else
-		    finish();
+		    this.finish();
 
 	    }
 
